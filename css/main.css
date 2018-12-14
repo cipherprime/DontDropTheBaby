@@ -4,14 +4,51 @@ html, body, div, ul, li, button, h1, p
     padding: 0px;
 }
 
+@keyframes scroll {
+    0% { transform: translate(0px,0px) }
+    100% { transform: translate(90px,90px) }
+}
+
+body:before{
+  content:"";
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  z-index: -1;
+  background: url( "../img/drink.png" ) repeat;
+  background-color: #f8fbfb;
+  /* transform: rotate(-25deg); */
+  animation: scroll 3s infinite linear;
+}
+
 body
 {
     overflow: hidden;
-    font-family: 'Gloria Hallelujah', cursive;  
+    font-family: 'Gloria Hallelujah', cursive;
     font-size: 14px;
-    background-color: #f8fbfb;
     /* background-color: #ffe8d9; */
     /* f8fbfb */
+}
+
+body.drink:before
+{
+  background-image: url("../img/drink.png");
+}
+
+body.sun:before
+{
+  background-image: url("../img/sun.png");
+}
+
+body.popsicle:before
+{
+  background-image: url("../img/popsicle.png");
+}
+body.anchor:before
+{
+  background-image: url("../img/anchor.png");
 }
 
 #footer
