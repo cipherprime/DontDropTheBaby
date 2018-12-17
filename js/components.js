@@ -51,7 +51,7 @@
     //    var pos = this.parent.GetPosition();
     //    var targetPos = this.target.GetPosition();
 
-    //     var d = 
+    //     var d =
 
     // }
 // OFFSET SPRING COMPONENT
@@ -94,11 +94,11 @@
     {
       this.parent.alpha = 0;
       if(this.autoDestroy == false)
-        return;      
-        
+        return;
+
       this.SetComponentsUpdate( false );
       this.parent.parent.removeChild( this.parent);
-     }else{   
+     }else{
       this.parent.alpha *= this.ease;
     }
   }
@@ -153,18 +153,18 @@
     {
         this.frequency = 20;
         this.amplitude = new createjs.Point(1, 1);
-  
+
         this.randomOffset = false;
         this.offset = 0;
         this.stop = false;
-  
+
         this.lastOffset = new createjs.Point(0,0);
     }
     var p = createjs.extend( OscillateScaleComponent, Component );
     p.OnAdd = function()
     {
         if(this.randomOffset)
-            this.offset = Math.random() * 10000;        
+            this.offset = Math.random() * 10000;
     }
     p.OnUpdate = function( event )
     {
@@ -182,7 +182,7 @@
     {
         this.counter = 0;
         this.increment = .1;
-        this.amplitude = new createjs.Point(0, 10);        
+        this.amplitude = new createjs.Point(0, 10);
     }
     var p = createjs.extend( OscillatePositionComponent, Component );
     p.OnAdd = function()
@@ -190,10 +190,32 @@
         this.origin = this.origin || this.parent.GetPosition();
     }
     p.OnUpdate = function( event )
-    {       
+    {
         this.parent.x = this.origin.x + Math.sin( this.counter ) * this.amplitude.x;
         this.parent.y = this.origin.y + Math.cos( this.counter ) * this.amplitude.y;
-        this.counter += this.increment;     
+        this.counter += this.increment;
+    }
+
+// OSCILLATE COMPONENT - TEST
+    function OscillateRotationComponent()
+    {
+        this.counter = 0;
+        this.increment = .1;
+        this.amplitude = 5;
+        this.frequency = 1;
+        console.log( "created" );
+    }
+    var p = createjs.extend( OscillateRotationComponent, Component );
+    p.OnAdd = function()
+    {
+        this.origin = this.origin || this.parent.rotation;
+    }
+    p.OnUpdate = function( event )
+    {
+      console.log( this.counter );
+        var targetRotation = Math.sin( this.counter ) * this.amplitude;
+        this.parent.rotation = this.origin + targetRotation;
+        this.counter += this.increment;
     }
 
 // TRANSLATE COMPONENT
@@ -207,7 +229,7 @@
     this.parent.x += this.velocity.x;
     this.parent.y += this.velocity.y;
   }
-  
+
 // VELOCITY COMPONENT
   function VelocityComponent()
   {

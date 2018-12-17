@@ -4,6 +4,7 @@ var textOutput;
 var explosions;
 var hiscore;
 var compass;
+var indicator;
 
 
 var config = {
@@ -13,14 +14,16 @@ var config = {
 	hitForce: 40,
 	babyFriction: .99,
 	touchIndicatorSize: 30,
-	gravity: 0.4,
+	gravity: 0.3,
 	rotationEase: .01,
 	bodyRotationEase: .01,
 	hairRotationEase: .03,
 	resetTime: 1500,
 	hitScale: 3,
 	numberScalePop: 8,
-	softServeGravity: 0.2
+	softServeGravity: 0.1,
+	fillThreshold: 0.95,
+	flexTime: 2,
 };
 
 var manifest = [
@@ -76,6 +79,8 @@ function applicationReady( event )
 	document.ontouchstart = ( mouseDown ).bind( this );
 	document.onmousedown = ( mouseDown ).bind( this );
 
+	indicator = new FlexIndicator( 50);
+
 	var spinBaby = new SpinComponent();
 		spinBaby.ease = config.rotationEase;
 		spinBaby.targetRotation = Math.random() * 360;
@@ -107,13 +112,6 @@ function applicationReady( event )
 		//titleContainer.AddComponent( titleScale );
 		titleContainer.SetComponentsUpdate( true );
 
-	// var backgroundImg = applicationData.getResult("toy_1");
-	// var background = new createjs.Shape();
-	// 	background.graphics.beginBitmapFill(backgroundImg).drawRect(0, 0, stage.width + backgroundImg.width, stage.height + backgroundImg.height);
-	// 	background.tileW = backgroundImg.width;
-	// 	background.tileH = backgroundImg.height;
-	// 	// background.AddComponent( backgroundScale );
-		// background.SetComponentsUpdate( true );
 
 	var hitRadius = config.babySize;
 	var hitArea = new createjs.Shape();
@@ -154,13 +152,45 @@ function applicationReady( event )
 
 	compass.addChild( bg, text );
 
+
+	// indicator.SetComponentsUpdate(true);
+	indicator.y = stage.height/4;
+
 	container.addChild( compass );
+	container.addChild( indicator );
 	// container.addChild( testBaby );
 
 	stage.addChild( hiscore );
 	stage.on("tick", update, this);
 	stage.setChildIndex( container, stage.numChildren-1);	// put game on top
 
+
+	indicator.SetFill(0);
+
+	var space = event => event.key == " ";
+
+	var keyPress = Rx.Observable.fromEvent( window, "keypress" )
+		.filter( event => !event.repeat )
+		.filter(space);
+
+	var keyUp = Rx.Observable.fromEvent( window, "keyup" )
+		.filter(space);
+
+	var tick = Rx.Observable.fromEvent( stage, "tick" );
+
+	keyPress
+		.flatMap( () => tick.takeUntil( keyUp ) )
+		.subscribe( event => {
+			indicator.SetFill( indicator.fillAmount + config.flexTime / 60 );
+		});
+
+
+	keyUp
+		.filter( () => indicator.fillAmount > config.fillThreshold )
+		.subscribe( event => {
+			indicator.Release();
+			babyHit();
+		} );
 
 }
 
@@ -181,9 +211,23 @@ function babyHit( event )
 	changeBkg();
 
 	var force = config.hitForce;
-	var mp = container.globalToLocal( stage.mouseX , stage.mouseY );
+	// var mp = container.globalToLocal( stage.mouseX , stage.mouseY );
+
+	var p = indicator.GetPopPosition();
+	var mp = container.globalToLocal( p.x, p.y );
+
+
+	if( !softServed )
+		mp.x += Math.random() * 25 - 50;
 	var subtract = mp.subtract(baby.GetPosition());
+	var dist = subtract.length();
+
+	if( dist > config.hitareaSize )
+		return;
+
 		subtract = subtract.normalized();
+
+
 
 	var angle = mp.degreesTo( baby.GetPosition() );
 	//var dist = createjs.Point.distance(dist, baby.GetPosition());
@@ -254,11 +298,15 @@ function updateTitle()
 		gameTitle.text = "DON'T\nDROP\nTHE\nBALL!";
 		gameTitle.y = -100;
 		scaleAmount = 1.1;
+
+		indicator.visible = false;
 	}else{
 		gameTitle.text = hits.toString();
 		gameTitle.y = 0;
 
 		scaleAmount = config.numberScalePop;
+
+		indicator.visible = true;
 	}
 
 	// var woosh = createjs.Sound.play("woosh", {loop:0, volume: .15});
@@ -266,11 +314,8 @@ function updateTitle()
 	.to({scaleX: scaleAmount, scaleY: scaleAmount}, 200, createjs.Ease.bounceIn)
 	.to({scaleX: 1, scaleY: 1}, 150, createjs.Ease.bounceOut);
 }
-function mouseMove( event )
-{
-	var component = baby.GetComponent( VelocityComponent );
-		component.velocity.y += -2;
-}
+
+
 
 function mouseDown( event )
 {
@@ -290,6 +335,8 @@ function mouseDown( event )
 		touch.x = mp.x;
 		touch.y = mp.y;
 	container.addChild( touch );
+
+	indicator.SetFill(0);
 
 	// clickSound = createjs.Sound.play("explosionHit", {loop:0, volume: .2,interrupt: createjs.Sound.INTERRUPT_ANY});
 }
@@ -397,7 +444,7 @@ function resetGame()
 		return;
 
 	baby.y = stage.height * -.5 - config.babySize * .5;
-	baby.x = 0;
+	baby.x = Math.random() * 50;
 
 	var component = baby.GetComponent( VelocityComponent );
 		component.velocity.y = config.startingVelocity.y;
@@ -418,6 +465,8 @@ function update( event )
 	var component = baby.GetComponent( VelocityComponent );
 	var halfWidth = config.babySize * .5;
 
+	indicator.SetPopX( baby.x );
+
 	if(baby.y >= stage.height * .5 + config.babySize * 2 )
 	{
 		if(isGameOver == false)
@@ -432,11 +481,13 @@ function update( event )
 	if(baby.x <= stage.width * -.5 + halfWidth)
 	{
 		component.velocity.x = - component.velocity.x;
+		baby.x = stage.width * -.5 + halfWidth;
 		// baby.x = stage.width * .5 + halfWidth;
 	}else if(baby.x >= stage.width * .5 - halfWidth)
 	{
 		// baby.x = stage.width * -.5 - halfWidth;
 		component.velocity.x = - component.velocity.x;
+		baby.x = stage.width * .5 - halfWidth;
 	}
 
 

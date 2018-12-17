@@ -33,6 +33,7 @@ createjs.DisplayObject.prototype.SetComponentsUpdate = function( state )
 {
   	if((state == true) && (this.componentsUpdating == false))
   	{
+
 		this.on("tick", this.Update,this);
   	}else{
   		this.off("tick", this.Update,this);
@@ -80,6 +81,7 @@ createjs.DisplayObject.prototype.RemoveComponent = function( component )
 }
 createjs.DisplayObject.prototype.Update = function( event )
 {
+
 	if(this.components == null)
 		return;
 
@@ -189,4 +191,9 @@ createjs.Math = {};
 createjs.Math.lerp = function ( A, B, t )
 {
     return  A + t * (B - A);
+}
+
+createjs.Math.clamp = function ( t, min, max )
+{
+	return Math.min( max, Math.max( t, min ) );
 }
