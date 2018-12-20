@@ -25,7 +25,27 @@ var config = {
 	fillThreshold: 0.95,
 	flexTime: 2,
 	deflateTime: 4,
-	flexThreshold: 0
+	flexThreshold: 0,
+
+	difficulty: {
+		low: {
+			min = 0,
+			max = 750,
+		},
+		medium: {
+			min = 751,
+			max = 1500,
+		},
+		high: {
+			min = 1501,
+			max = 2250,
+		},
+		highest: {
+			min = 2251,
+			max = 3000,
+		}
+
+	}
 };
 
 var manifest = [
