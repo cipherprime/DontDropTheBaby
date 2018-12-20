@@ -37,7 +37,7 @@
       var whiteText = mkText( "#FFF" );
       var colorText = mkText( color );
 
-        colorText.y = whiteText.y = 140;
+        colorText.y = whiteText.y = stage.height/8;
 
         var mask = new createjs.Shape();
         mask.graphics.beginFill( "#F0F" )
@@ -75,7 +75,7 @@
           this.textMask.y = pt.y;
 
           this.displayAmount = createjs.Math.lerp( this.displayAmount, this.fillAmount, 0.6 );
-          this.fill.y = createjs.Math.lerp( 300, -2, this.displayAmount );
+          this.fill.y = createjs.Math.lerp( stage.height/4 + 60, -2, this.displayAmount );
 
           var isFull = this.fillAmount >= config.fillThreshold;
 
@@ -117,6 +117,16 @@
 
           this.fillAmount = createjs.Math.clamp( signal, 0, 1 );
 
+        }
+
+        p.Increment = function()
+        {
+          this.SetFill( this.fillAmount + config.flexTime / 60 );
+        }
+
+        p.Decrement = function()
+        {
+          this.SetFill( this.fillAmount - config.deflateTime / 60 );
         }
 
     window.FlexIndicator = createjs.promote( FlexIndicator, "Container" );

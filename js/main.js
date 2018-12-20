@@ -24,6 +24,8 @@ var config = {
 	softServeGravity: 0.1,
 	fillThreshold: 0.95,
 	flexTime: 2,
+	deflateTime: 4,
+	flexThreshold: 0
 };
 
 var manifest = [
@@ -113,6 +115,8 @@ function applicationReady( event )
 		titleContainer.SetComponentsUpdate( true );
 
 
+
+
 	var hitRadius = config.babySize;
 	var hitArea = new createjs.Shape();
 		hitArea.graphics.beginFill("green").drawCircle(0,0,hitRadius).
@@ -138,6 +142,7 @@ function applicationReady( event )
 	hiscore.x = stage.width - hiscorePadding;
 	hiscore.y = hiscorePadding;
 
+	container.addChild( indicator );
 	container.addChild( titleContainer, explosions, baby ); //,hair
 
 
@@ -157,7 +162,7 @@ function applicationReady( event )
 	indicator.y = stage.height/4;
 
 	container.addChild( compass );
-	container.addChild( indicator );
+
 	// container.addChild( testBaby );
 
 	stage.addChild( hiscore );
@@ -166,33 +171,83 @@ function applicationReady( event )
 
 
 	indicator.SetFill(0);
-
-	var space = event => event.key == " ";
-
-	var keyPress = Rx.Observable.fromEvent( window, "keypress" )
-		.filter( event => !event.repeat )
-		.filter(space);
-
-	var keyUp = Rx.Observable.fromEvent( window, "keyup" )
-		.filter(space);
-
-	var tick = Rx.Observable.fromEvent( stage, "tick" );
-
-	keyPress
-		.flatMap( () => tick.takeUntil( keyUp ) )
-		.subscribe( event => {
-			indicator.SetFill( indicator.fillAmount + config.flexTime / 60 );
-		});
-
-
-	keyUp
-		.filter( () => indicator.fillAmount > config.fillThreshold )
-		.subscribe( event => {
-			indicator.Release();
-			babyHit();
-		} );
-
+	setupLogic();
 }
+
+
+function setupLogic()
+{
+
+		//
+		// Rx.Observable.fromEvent( document, "click" )
+		//   .take(1)
+		//   .subscribe( async event => {
+		//     try {
+		//         await onStartButtonClick();
+		//     } catch (error) {
+		//         console.log(error);
+		//     }
+		//   })
+
+		var debugText = new createjs.Text("debug");
+		// container.addChild( debugText );
+		debugText.y = -stage.height/2;
+		debugText.x = -stage.width/2;
+
+		var space = event => event.key == " ";
+
+		var keyPress = Rx.Observable.fromEvent( window, "keypress" )
+			.filter( event => !event.repeat )
+			.filter(space);
+
+		var keyUp = Rx.Observable.fromEvent( window, "keyup" )
+			.filter(space);
+
+		var tick = Rx.Observable.fromEvent( stage, "tick" );
+
+		keyPress
+			.flatMap( () => tick.takeUntil( keyUp ) )
+			.subscribe( () => indicator.Increment() );
+
+
+		keyUp
+			.filter( () => indicator.fillAmount > config.fillThreshold )
+			.subscribe( event => {
+				indicator.Release();
+				babyHit();
+			} );
+
+		keyUp
+			.filter( () => indicator.fillAmount < config.fillThreshold )
+			.subscribe( () => indicator.Decrement() )
+
+		var v = Rx.Observable.fromEvent( window, 'value' )
+			.map( event => event.detail )
+			// .filter( detail => detail.channel == 2);
+
+		var v1 = v
+			.filter( detail => detail.channel == 1);
+
+		var v2 = v
+			.filter( detail => detail.channel == 2);
+
+
+		v1.withLatestFrom(v2)
+			.subscribe( ([v1, v2]) => debugText.text = `1: ${v1.value}\n2: ${v2.value}`)
+
+			var values = v2;
+
+		values
+			.filter( detail => detail.value >= config.flexThreshold )
+			.subscribe( () => indicator.Increment() );
+
+		// values
+		// 	.filter( detail => detail.value < config.flexThreshold )
+		// 	.subscribe( () => indicator.Decrement() );
+}
+
+
+
 
 var currentBg = 0;
 function changeBkg()
