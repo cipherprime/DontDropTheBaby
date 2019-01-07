@@ -11,10 +11,8 @@ var config = {
 	startingVelocity: new createjs.Point(0,5),
 	babySize: 90,
 	hitareaSize: 160,
-	hitForce: 40,
 	babyFriction: .99,
 	touchIndicatorSize: 30,
-	gravity: 0.3,
 	rotationEase: .01,
 	bodyRotationEase: .01,
 	hairRotationEase: .03,
@@ -23,30 +21,51 @@ var config = {
 	numberScalePop: 8,
 	softServeGravity: 0.1,
 	fillThreshold: 0.95,
-	flexTime: 2,
-	deflateTime: 4,
+
 	flexThreshold: 0,
 
 	difficulty: {
 		low: {
-			min = 0,
-			max = 750,
+			min: 0,
+			max: 750,
 		},
 		medium: {
-			min = 751,
-			max = 1500,
+			min: 751,
+			max: 1500,
 		},
 		high: {
-			min = 1501,
-			max = 2250,
+			min: 1501,
+			max: 2250,
 		},
 		highest: {
-			min = 2251,
-			max = 3000,
+			min: 2251,
+			max: 3000,
 		}
 
 	}
+
 };
+
+
+var ChannelMode = {
+	SINGLE: "Single",
+	DUAL: "Dual"
+};
+
+var gameSettings = {
+	flexTime: 2,
+	deflateTime: 4,
+	gravity: 0.2,
+	hitForce: 30,
+	minStrength: 0,
+	maxStrength: 750,
+	useCeiling: false,
+	channelOneName: "One",
+	channelTwoName: "Two",
+	channelMode: ChannelMode.DUAL,
+}
+
+var currentChannel = 0;
 
 var manifest = [
 		// {src:"audio/background.mp3", id: "background"},
@@ -285,7 +304,7 @@ function babyHit( event )
 
 	changeBkg();
 
-	var force = config.hitForce;
+	var force = gameSettings.hitForce;
 	// var mp = container.globalToLocal( stage.mouseX , stage.mouseY );
 
 	var p = indicator.GetPopPosition();
@@ -325,6 +344,15 @@ function babyHit( event )
 
 	hits++;
 
+	if( gameSettings.channelMode == ChannelMode.DUAL )
+	{
+		currentChannel = currentChannel == 0 ? 1 : 0;
+		if( currentChannel == 0 )
+			indicator.SetChannelOne();
+		else if( currentChannel == 1 )
+			indicator.SetChannelTwo();
+	}
+
 	var flashComp = new FadeComponent();
 		flashComp.autoDestroy = true;
 
@@ -350,7 +378,7 @@ function babyHit( event )
 	if( softServed == false)
 	{
 		softServed == true;
-		currentGravity = config.gravity;
+		currentGravity = gameSettings.gravity;
 	}
 }
 
@@ -532,6 +560,13 @@ function resetGame()
 	softServed = false;
 	currentGravity = config.softServeGravity;
 
+	currentChannel = 0;
+
+	if( gameSettings.channelMode == ChannelMode.SINGLE )
+		indicator.SetSingle();
+	else
+		indicator.SetChannelOne();
+
 	updateTitle();
 }
 
@@ -566,10 +601,16 @@ function update( event )
 	}
 
 
+	if( gameSettings.useCeiling && baby.y <= stage.height * -.5 + halfWidth )
+	{
+		component.velocity.y = -0.2 * component.velocity.y;
+		baby.y = stage.height * -.5 + halfWidth;
+	}
 
-compass.x = baby.x;// Math.min( Math.max( -stage.width * .5 + 20, baby.x ), stage.width * .5 - 20 );
-compass.y = -stage.height * .5 + 30;
-compass.visible = baby.y <= stage.height * -.5 - halfWidth;
+
+	compass.x = baby.x;// Math.min( Math.max( -stage.width * .5 + 20, baby.x ), stage.width * .5 - 20 );
+	compass.y = -stage.height * .5 + 30;
+	compass.visible = baby.y <= stage.height * -.5 - halfWidth;
 
 	component.velocity.y += currentGravity;
 	textOutput.Debug( component.velocity.y );

@@ -8,12 +8,21 @@
         var fill = new createjs.Shape();
         var color = getRandomColor();
 
-        line.graphics.beginStroke( color )
+        this.lastColor = color;
+        this.flexText = "FLEX";
+
+        this.commands = [];
+
+        this.commands.push( line.graphics.beginStroke( color ).command );
+
+        line.graphics
           .setStrokeStyle( 3, "round" )
           .setStrokeDash([10,10], 0)
           .drawRect(-stage.width, 0, stage.width * 2, stage.height );
 
-        fill.graphics.beginFill( color )
+        this.commands.push( fill.graphics.beginFill( color ).command );
+
+        fill.graphics
           .drawRect(-stage.width, 0, stage.width * 2, stage.height );
 
         var fillContainer = new createjs.Container();
@@ -57,6 +66,8 @@
 
         this.texts = [ whiteText, colorText ];
 
+this.colorText = colorText;
+
         stage.on("tick", this.OnUpdate, this );
 
         this.displayAmount = 0;
@@ -79,11 +90,45 @@
 
           var isFull = this.fillAmount >= config.fillThreshold;
 
-          this.texts.forEach( text => text.text = isFull ? "RELEASE!" : "FLEX" );
+          this.texts.forEach( text => text.text = isFull ? "RELEASE!" : this.flexText );
 
           this.texts.map( text => text.GetComponent( OscillateScaleComponent ) )
             .forEach( scale => scale.frequency = isFull ? 20 : 5 );
 
+        }
+
+        p.SetColor = function( color )
+        {
+          this.lastColor = color;
+          this.commands.forEach( com => com.style = color );
+          this.colorText.color = color;
+        }
+
+        p.SetNewRandomColor = function()
+        {
+          newColor = getRandomColor();
+          while( newColor == this.lastColor )
+            newColor = getRandomColor();
+
+          this.SetColor( newColor );
+        }
+
+        p.SetChannelOne = function()
+        {
+          this.flexText = "FLEX " + gameSettings.channelOneName.toUpperCase();
+          this.SetNewRandomColor();
+        }
+
+        p.SetChannelTwo = function()
+        {
+          this.flexText = "FLEX " + gameSettings.channelTwoName.toUpperCase();
+          this.SetNewRandomColor();
+        }
+
+        p.SetSingle = function()
+        {
+          this.flexText = "FLEX";
+          this.SetNewRandomColor();
         }
 
         p.Hit = function()
@@ -121,12 +166,12 @@
 
         p.Increment = function()
         {
-          this.SetFill( this.fillAmount + config.flexTime / 60 );
+          this.SetFill( this.fillAmount + gameSettings.flexTime / 60 );
         }
 
         p.Decrement = function()
         {
-          this.SetFill( this.fillAmount - config.deflateTime / 60 );
+          this.SetFill( this.fillAmount - gameSettings.deflateTime / 60 );
         }
 
     window.FlexIndicator = createjs.promote( FlexIndicator, "Container" );

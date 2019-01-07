@@ -5,11 +5,11 @@
 
         this.size = size;
         this.scaleX = this.scaleY = scale;
-        this.gravity = config.gravity * 3;
-        var img = applicationData.getResult( img );	
+        this.gravity = gameSettings.gravity * 3;
+        var img = applicationData.getResult( img );
 
         this.bitmap = new createjs.Bitmap( img.src );
-        this.bitmap.regX = this.bitmap.regY = size* .5;        
+        this.bitmap.regX = this.bitmap.regY = size* .5;
 
         var spin = new SpinComponent();
 		    spin.ease = .01;
@@ -44,12 +44,12 @@
         {
             var component = this.GetComponent( VelocityComponent );
             var halfWidth = this.size * .5;
-            
+
             if(this.y >= stage.height * .5 + this.size * 2 )
             {
                 this.Destroy();
             }
-            
+
             if(this.x <= stage.width * -.5 - halfWidth)
             {
                 this.x = stage.width * .5 + halfWidth;
@@ -57,8 +57,8 @@
             {
                 this.x = stage.width * -.5 - halfWidth;
             }
-    
-            component.velocity.y += this.gravity;         
+
+            component.velocity.y += this.gravity;
         }
         p.Destroy = function()
         {
