@@ -261,7 +261,7 @@ function setupLogic()
 
 
 		strongFlexStream
-			.flatMap( () =>> tick.takeUntil( weakFlexStream ))
+			.flatMap( () => tick.takeUntil( weakFlexStream ))
 			.subscribe( indicator.Increment );
 
 		weakFlexStream
