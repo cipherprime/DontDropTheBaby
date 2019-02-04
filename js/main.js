@@ -47,23 +47,8 @@ var config = {
 };
 
 
-var ChannelMode = {
-	SINGLE: "Single",
-	DUAL: "Dual"
-};
 
-var gameSettings = {
-	flexTime: 2,
-	deflateTime: 4,
-	gravity: 0.2,
-	hitForce: 30,
-	minStrength: 0,
-	maxStrength: 750,
-	useCeiling: false,
-	channelOneName: "One",
-	channelTwoName: "Two",
-	channelMode: ChannelMode.DUAL,
-}
+
 
 var currentChannel = 0;
 
@@ -212,6 +197,16 @@ function applicationReady( event )
 	indicator.SetFill(0);
 	setupLogic();
 }
+
+
+var startFlexStream = new Rx.Subject();
+var endFlexStream = new Rx.Subject();
+
+function receiveInputFromDevice( level )
+{
+	// if( level > config.)
+}
+
 
 
 function setupLogic()
@@ -603,7 +598,7 @@ function update( event )
 
 	if( gameSettings.useCeiling && baby.y <= stage.height * -.5 + halfWidth )
 	{
-		component.velocity.y = -0.2 * component.velocity.y;
+		component.velocity.y = -0.1 * component.velocity.y;
 		baby.y = stage.height * -.5 + halfWidth;
 	}
 
