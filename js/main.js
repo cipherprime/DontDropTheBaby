@@ -199,15 +199,18 @@ function applicationReady( event )
 }
 
 
-var startFlexStream = new Rx.Subject();
-var endFlexStream = new Rx.Subject();
+var strongFlexStream = new Rx.Subject();
+var weakFlexStream = new Rx.Subject();
 
 function receiveInputFromDevice( level )
 {
-	// if( level > config.)
+	if( level >= gameSettings.maxStrength )
+	{
+		strongFlexStream.next( level );
+	} else {
+		weakFlexStream.next( level );
+	}
 }
-
-
 
 function setupLogic()
 {
@@ -255,25 +258,49 @@ function setupLogic()
 			.filter( () => indicator.fillAmount < config.fillThreshold )
 			.subscribe( () => indicator.Decrement() )
 
-		var v = Rx.Observable.fromEvent( window, 'value' )
-			.map( event => event.detail )
-			// .filter( detail => detail.channel == 2);
-
-		var v1 = v
-			.filter( detail => detail.channel == 1);
-
-		var v2 = v
-			.filter( detail => detail.channel == 2);
 
 
-		v1.withLatestFrom(v2)
-			.subscribe( ([v1, v2]) => debugText.text = `1: ${v1.value}\n2: ${v2.value}`)
+		strongFlexStream
+			.flatMap( () =>> tick.takeUntil( weakFlexStream ))
+			.subscribe( indicator.Increment );
 
-			var values = v2;
+		weakFlexStream
+			.filter( () => indicator.fillAmount > config.fillThreshold )
+			.subscribe( event => {
+				indicator.Release();
+				babyHit();
+			} );
 
-		values
-			.filter( detail => detail.value >= config.flexThreshold )
-			.subscribe( () => indicator.Increment() );
+		weakFlexStream
+			.filter( () => indicator.fillAmount < config.fillThreshold )
+			.subscribe( () => indicator.Decrement() )
+
+
+
+
+
+
+		//
+		//
+		// var v = Rx.Observable.fromEvent( window, 'value' )
+		// 	.map( event => event.detail )
+		// 	// .filter( detail => detail.channel == 2);
+		//
+		// var v1 = v
+		// 	.filter( detail => detail.channel == 1);
+		//
+		// var v2 = v
+		// 	.filter( detail => detail.channel == 2);
+		//
+		//
+		// v1.withLatestFrom(v2)
+		// 	.subscribe( ([v1, v2]) => debugText.text = `1: ${v1.value}\n2: ${v2.value}`)
+		//
+		// 	var values = v2;
+		//
+		// values
+		// 	.filter( detail => detail.value >= config.flexThreshold )
+		// 	.subscribe( () => indicator.Increment() );
 
 		// values
 		// 	.filter( detail => detail.value < config.flexThreshold )
