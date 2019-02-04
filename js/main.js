@@ -204,6 +204,7 @@ var weakFlexStream = new Rx.Subject();
 
 
 var flexEventStream = new Rx.Subject();
+var currentLevel = 0;
 
 function receiveInputFromDevice( level )
 {
@@ -215,6 +216,7 @@ function receiveInputFromDevice( level )
 	// }
 
 	console.log("RECEIVED! >> ", level);
+	// currentLevel = createjs.Math.lerp( currentLevel, level, 0.7)
 	flexEventStream.next( level );
 }
 
@@ -266,11 +268,23 @@ function setupLogic()
 
 
 
-		var [ strongTicks, weakTicks ] =
-			tick.withLatestFrom( flexEventStream )
-				.partition( ([tick, level]) => level >= gameSettings.maxStrength );
+		// var [ strongTicks, weakTicks ] =
+			
+				// .partition( ([tick, level]) => level >= gameSettings.maxStrength );
 
-		strongTicks.subscribe( indicator.Increment );
+		var flexTick = tick.withLatestFrom( flexEventStream );
+
+		var strongTicks = flexTick
+			.filter( ([tick, level]) => level >= gameSettings.maxStrength );
+
+		var weakTicks = flexTick
+			.filter( ([tick, level]) => level <= gameSettings.minStrength );
+
+
+		strongTicks
+			// .do( () => console.log('strong tick') )
+			.subscribe( () => indicator.Increment() );
+
 
 		weakTicks
 			.filter( () => indicator.fillAmount > config.fillThreshold )
