@@ -202,14 +202,20 @@ function applicationReady( event )
 var strongFlexStream = new Rx.Subject();
 var weakFlexStream = new Rx.Subject();
 
+
+var flexEventStream = new Rx.Subject();
+
 function receiveInputFromDevice( level )
 {
-	if( level >= gameSettings.maxStrength )
-	{
-		strongFlexStream.next( level );
-	} else {
-		weakFlexStream.next( level );
-	}
+	// if( level >= gameSettings.maxStrength )
+	// {
+	// 	strongFlexStream.next( level );
+	// } else {
+	// 	weakFlexStream.next( level );
+	// }
+
+	console.log("RECEIVED! >> ", level);
+	flexEventStream.next( level );
 }
 
 function setupLogic()
@@ -260,20 +266,44 @@ function setupLogic()
 
 
 
-		strongFlexStream
-			.flatMap( () => tick.takeUntil( weakFlexStream ))
-			.subscribe( indicator.Increment );
+		var [ strongTicks, weakTicks ] =
+			tick.withLatestFrom( flexEventStream )
+				.partition( ([tick, level]) => level >= gameSettings.maxStrength );
 
-		weakFlexStream
+		strongTicks.subscribe( indicator.Increment );
+
+		weakTicks
 			.filter( () => indicator.fillAmount > config.fillThreshold )
 			.subscribe( event => {
 				indicator.Release();
 				babyHit();
 			} );
 
-		weakFlexStream
+		weakTicks
 			.filter( () => indicator.fillAmount < config.fillThreshold )
 			.subscribe( () => indicator.Decrement() )
+
+
+
+
+
+		// var startFlexStream =
+		// 	strongFlexStream.takeUntil( weakFlexStream )
+		//
+		// strongFlexStream
+		// 	.flatMap( () => tick.takeUntil( weakFlexStream ))
+		// 	.subscribe( indicator.Increment );
+		//
+		// weakFlexStream
+		// 	.filter( () => indicator.fillAmount > config.fillThreshold )
+		// 	.subscribe( event => {
+		// 		indicator.Release();
+		// 		babyHit();
+		// 	} );
+		//
+		// weakFlexStream
+		// 	.filter( () => indicator.fillAmount < config.fillThreshold )
+		// 	.subscribe( () => indicator.Decrement() )
 
 
 
