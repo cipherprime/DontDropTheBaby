@@ -204,6 +204,7 @@ var weakFlexStream = new Rx.Subject();
 
 
 var flexEventStream = new Rx.Subject();
+var currentLevel = 0;
 
 function receiveInputFromDevice( level )
 {
@@ -215,6 +216,7 @@ function receiveInputFromDevice( level )
 	// }
 
 	console.log("RECEIVED! >> ", level);
+	// currentLevel = createjs.Math.lerp( currentLevel, level, 0.7)
 	flexEventStream.next( level );
 }
 

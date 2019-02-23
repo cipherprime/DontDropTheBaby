@@ -8,7 +8,7 @@ var gameSettings = {
 	flexTime: 2,
 	gravity: 1,
 	hitForce: 30,
-	minStrength: 0,
+	minStrength: 400,
 	useCeiling: false,
 	channelOneName: "Quad",
 	channelTwoName: "Calf",
