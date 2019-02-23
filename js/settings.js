@@ -6,13 +6,11 @@ var ChannelMode = {
 
 var gameSettings = {
 	flexTime: 2,
-	deflateTime: 4,
-	gravity: 0.2,
+	gravity: 1,
 	hitForce: 30,
 	minStrength: 0,
-	maxStrength: 750,
 	useCeiling: false,
 	channelOneName: "Quad",
 	channelTwoName: "Calf",
-	channelMode: ChannelMode.DUAL,
+	channelMode: ChannelMode.SINGLE,
 }

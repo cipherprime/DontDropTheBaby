@@ -90,10 +90,10 @@ this.colorText = colorText;
 
           var isFull = this.fillAmount >= config.fillThreshold;
 
-          this.texts.forEach( text => text.text = isFull ? "RELEASE!" : this.flexText );
+          this.texts.forEach( text => text.text = isFull ? "TAP TO BOUNCE!" : this.flexText );
 
           this.texts.map( text => text.GetComponent( OscillateScaleComponent ) )
-            .forEach( scale => scale.frequency = isFull ? 20 : 5 );
+            .forEach( scale => scale.frequency = isFull ? 10 : 5 );
 
         }
 
@@ -164,14 +164,15 @@ this.colorText = colorText;
 
         }
 
-        p.Increment = function()
+        p.Increment = function( deltaTime )
         {
-          this.SetFill( this.fillAmount + gameSettings.flexTime / 60 );
+          // console.log( tick );
+          this.SetFill( this.fillAmount + deltaTime / gameSettings.flexTime );
         }
 
-        p.Decrement = function()
+        p.Decrement = function( deltaTime )
         {
-          this.SetFill( this.fillAmount - gameSettings.deflateTime / 60 );
+          this.SetFill( this.fillAmount - deltaTime / gameSettings.flexTime );
         }
 
     window.FlexIndicator = createjs.promote( FlexIndicator, "Container" );

@@ -8,7 +8,7 @@ var indicator;
 
 
 var config = {
-	startingVelocity: new createjs.Point(0,5),
+	startingVelocity: new createjs.Point(0,0),
 	babySize: 90,
 	hitareaSize: 160,
 	babyFriction: .99,
@@ -21,6 +21,7 @@ var config = {
 	numberScalePop: 8,
 	softServeGravity: 0.1,
 	fillThreshold: 0.95,
+	maxGravity: 0.1,
 
 	flexThreshold: 0,
 
@@ -102,8 +103,7 @@ function applicationError( event )
 function applicationReady( event )
 {
 
-	document.ontouchstart = ( mouseDown ).bind( this );
-	document.onmousedown = ( mouseDown ).bind( this );
+
 
 	indicator = new FlexIndicator( 50);
 
@@ -149,12 +149,12 @@ function applicationReady( event )
 		textOutput = new createjs.Text("","20pt Arial", "#000000");
 		textOutput.x = textOutput.y = 10;
 
-		baby = new Baby();
+		baby = new Baby( config.babySize );
 		baby.AddComponent( spinBaby );
 		baby.AddComponent( velocityBaby );
 		// baby.AddComponent( babyScale );
 		baby.SetComponentsUpdate( true );
-		baby.on("mousedown", babyHit, this);
+		// baby.on("mousedown", babyHit, this);
 		baby.y = 1000;
 
 	var offset = new SpringComponent();
@@ -246,66 +246,46 @@ function setupLogic()
 		var keyUp = Rx.Observable.fromEvent( window, "keyup" )
 			.filter(space);
 
+			// document.ontouchstart = ( mouseDown ).bind( this );
+			// document.onmousedown = ( mouseDown ).bind( this );
+
+		var tap = Rx.Observable.merge(
+			Rx.Observable.fromEvent( document, "touchstart"),
+			Rx.Observable.fromEvent( document, "mousedown")
+		);
+
 		var tick = Rx.Observable.fromEvent( stage, "tick" );
+		var updates = new Rx.Subject();
+
+		var lastTimeStamp = 0;
+		tick.subscribe( event => {
+			var deltaTime = (event.timeStamp - lastTimeStamp)/1000;
+			lastTimeStamp = event.timeStamp;
+			updates.next( deltaTime );
+		} )
 
 		keyPress
-			.flatMap( () => tick.takeUntil( keyUp ) )
-			.subscribe( () => indicator.Increment() );
+			.flatMap( () => updates.takeUntil( keyUp ) )
+			.subscribe( (dt) => indicator.Increment( dt ) );
 
 
-		keyUp
+		tap
 			.filter( () => indicator.fillAmount > config.fillThreshold )
 			.subscribe( event => {
 				indicator.Release();
 				babyHit();
 			} );
 
-		keyUp
-			.filter( () => indicator.fillAmount < config.fillThreshold )
-			.subscribe( () => indicator.Decrement() )
-
+		tap.subscribe( mouseDown );
 
 
 		var [ strongTicks, weakTicks ] =
-			tick.withLatestFrom( flexEventStream )
-				.partition( ([tick, level]) => level >= gameSettings.maxStrength );
+			updates.withLatestFrom( flexEventStream )
+				.partition( ([tick, level]) => level >= gameSettings.minStrength );
 
-		strongTicks.subscribe( indicator.Increment );
-
-		weakTicks
-			.filter( () => indicator.fillAmount > config.fillThreshold )
-			.subscribe( event => {
-				indicator.Release();
-				babyHit();
-			} );
-
-		weakTicks
-			.filter( () => indicator.fillAmount < config.fillThreshold )
-			.subscribe( () => indicator.Decrement() )
-
-
-
-
-
-		// var startFlexStream =
-		// 	strongFlexStream.takeUntil( weakFlexStream )
-		//
-		// strongFlexStream
-		// 	.flatMap( () => tick.takeUntil( weakFlexStream ))
-		// 	.subscribe( indicator.Increment );
-		//
-		// weakFlexStream
-		// 	.filter( () => indicator.fillAmount > config.fillThreshold )
-		// 	.subscribe( event => {
-		// 		indicator.Release();
-		// 		babyHit();
-		// 	} );
-		//
-		// weakFlexStream
-		// 	.filter( () => indicator.fillAmount < config.fillThreshold )
-		// 	.subscribe( () => indicator.Decrement() )
-
-
+		strongTicks
+			.do( console.log )
+			.subscribe( dt => indicator.Increment( dt ) );
 
 
 
@@ -365,13 +345,22 @@ function babyHit( event )
 
 	if( !softServed )
 		mp.x += Math.random() * 25 - 50;
-	var subtract = mp.subtract(baby.GetPosition());
+
+	var position = baby.GetPosition();
+	var subtract = mp.subtract( position );
 	var dist = subtract.length();
 
-	if( dist > config.hitareaSize )
+	// console.log( position.y, p.y );
+
+	if( dist > config.hitareaSize && (position.y < 300) )
+	{
+		// console.log( position.y, p.y );
 		return;
+	}
+
 
 		subtract = subtract.normalized();
+		subtract.y = Math.abs( subtract.y );
 
 
 
@@ -430,8 +419,14 @@ function babyHit( event )
 	if( softServed == false)
 	{
 		softServed == true;
-		currentGravity = gameSettings.gravity;
+		currentGravity = getGravity();
+		console.log( currentGravity );
 	}
+}
+
+function getGravity()
+{
+	return createjs.Math.lerp( 0, config.maxGravity, gameSettings.gravity);
 }
 
 function getRandomColor()
@@ -598,7 +593,7 @@ function resetGame()
 	if( canReset == false)
 		return;
 
-	baby.y = stage.height * -.5 - config.babySize * .5;
+	baby.y = stage.height * -.7 - config.babySize * .5;
 	baby.x = Math.random() * 50;
 
 	var component = baby.GetComponent( VelocityComponent );
@@ -610,7 +605,7 @@ function resetGame()
 	canReset = false;
 	isGameOver = false;
 	softServed = false;
-	currentGravity = config.softServeGravity;
+	currentGravity = getGravity();
 
 	currentChannel = 0;
 

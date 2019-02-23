@@ -23,6 +23,7 @@
             top.addChild( head );
 
         this.addChild( top );
+        top.scaleX = top.scaleY = size /128;
 
     }
 
