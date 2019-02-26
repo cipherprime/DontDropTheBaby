@@ -90,7 +90,8 @@ this.colorText = colorText;
 
           var isFull = this.fillAmount >= config.fillThreshold;
 
-          this.texts.forEach( text => text.text = isFull ? "TAP TO BOUNCE!" : this.flexText );
+          var popText = gameSettings.tapToPop ? "TAP TO BOUNCE!" : "READY!";
+          this.texts.forEach( text => text.text = isFull ? popText : this.flexText );
 
           this.texts.map( text => text.GetComponent( OscillateScaleComponent ) )
             .forEach( scale => scale.frequency = isFull ? 10 : 5 );

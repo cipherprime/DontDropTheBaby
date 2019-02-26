@@ -271,14 +271,24 @@ function setupLogic()
 			.subscribe( (dt) => indicator.Increment( dt ) );
 
 
+		var pop = () => {
+			indicator.Release();
+			babyHit();
+		}
+
 		tap
+			.filter( () => gameSettings.tapToPop )
 			.filter( () => indicator.fillAmount > config.fillThreshold )
-			.subscribe( event => {
-				indicator.Release();
-				babyHit();
-			} );
+			.subscribe( pop );
 
 		tap.subscribe( mouseDown );
+
+		updates
+			.filter( () => !gameSettings.tapToPop )
+			.filter( () => ballWithinStrikingDistance() )
+			.filter( () => indicator.fillAmount > config.fillThreshold )
+			.subscribe( pop );
+
 
 
 		var [ strongTicks, weakTicks ] =
@@ -332,6 +342,27 @@ function changeBkg()
 		currentBg = ( currentBg + 1 ) % options.length;
 		body.classList.add( options[currentBg] );
 }
+
+function ballWithinStrikingDistance()
+{
+	var p = indicator.GetPopPosition();
+	var mp = container.globalToLocal( p.x, p.y );
+
+	if( !softServed )
+		mp.x += Math.random() * 25 - 50;
+
+	var position = baby.GetPosition();
+	var subtract = mp.subtract( position );
+	var dist = subtract.length();
+
+	// console.log( position.y, p.y );
+
+	if( dist > config.babySize && (position.y < 300) )
+		return false;
+	else
+		return true;
+}
+
 
 function babyHit( event )
 {

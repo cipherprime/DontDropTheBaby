@@ -10,7 +10,9 @@ var gameSettings = {
 	hitForce: 30,
 	minStrength: 400,
 	useCeiling: false,
+	tapToPop: false,
 	channelOneName: "Quad",
 	channelTwoName: "Calf",
 	channelMode: ChannelMode.SINGLE,
+
 }
