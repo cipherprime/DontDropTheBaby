@@ -290,10 +290,9 @@ function setupLogic()
 			.subscribe( pop );
 
 
-
-		var [ strongTicks, weakTicks ] =
-			updates.withLatestFrom( flexEventStream )
-				.partition( ([tick, level]) => level >= gameSettings.minStrength );
+		var strongTicks= updates.withLatestFrom( flexEventStream )
+				.filter( ([dt, level]) => level >= gameSettings.minStrength )
+				.map( ([dt,level]) => dt );
 
 		strongTicks
 			.do( console.log )
@@ -357,7 +356,7 @@ function ballWithinStrikingDistance()
 
 	// console.log( position.y, p.y );
 
-	if( dist > config.babySize && (position.y < 300) )
+	if( dist > config.hitareaSize && (position.y < 300) )
 		return false;
 	else
 		return true;
